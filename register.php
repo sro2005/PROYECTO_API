@@ -4,12 +4,11 @@
 // Verificar si se recibieron datos por método POST
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
-    // Obtener los datos del formulario
-    $username = $_POST['username'];
-    $password = $_POST['password'];
-    
+    // Obtener los datos del formulario en formato JSON
+    $data = json_decode(file_get_contents("php://input"), true);
+
     // Validar que los campos no estén vacíos
-    if (!empty($username) && !empty($password)) {
+    if (!empty($data['username']) && !empty($data['password'])) {
         
         // Conectar a la base de datos 
         require_once('db.php');
@@ -17,7 +16,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Verificar si el usuario ya existe en la base de datos
         $query = "SELECT * FROM usuarios WHERE username = ?";
         $stmt = $pdo->prepare($query);
-        $stmt->execute([$username]);
+        $stmt->execute([$data['username']]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         
         if ($row) {
@@ -30,7 +29,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Si el usuario no existe, insertarlo en la base de datos
             $query = "INSERT INTO usuarios (username, password) VALUES (?, ?)";
             $stmt = $pdo->prepare($query);
-            $stmt->execute([$username, password_hash($password, PASSWORD_DEFAULT)]);
+            $stmt->execute([$data['username'], password_hash($data['password'], PASSWORD_DEFAULT)]);
             
             // Confirmar el registro exitoso
             $response = [
